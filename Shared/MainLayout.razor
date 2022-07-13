@@ -1,0 +1,60 @@
+﻿@inherits LayoutComponentBase
+@inject IJSRuntime js
+
+<div class="page @ObterClasse()">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            Tema:
+            <select @onchange="MudarTema" style="margin-left: 1rem;">
+                @foreach (var modo in modos)
+                {
+                    <option selected="@Selecionado(modo)" value="@modo">@modo</option>
+                }
+            </select>
+            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    private string modoSelecionado = "Luz";
+    private List<string> modos = new List<string>() { "Luz", "Escuro" };
+    private readonly string chaveTema = "tema";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var modoLocalStorage = await js.InvokeAsync<string>("lerLocalStorage", chaveTema);
+        if (!string.IsNullOrEmpty(modoLocalStorage))
+        {
+            modoSelecionado = modoLocalStorage;
+        }
+    }
+
+    private string ObterClasse()
+    {
+        if(modoSelecionado == "Luz")
+        {
+            return string.Empty;
+        }
+        else
+        {
+            return "modo-escuro";
+        }
+    }
+
+    private bool Selecionado(string modo) => modo == modoSelecionado;
+
+    private async Task MudarTema(ChangeEventArgs e)
+    {
+        modoSelecionado = e.Value.ToString();
+        await js.InvokeVoidAsync("adicionarLocalStorage", chaveTema, modoSelecionado);
+    }
+}
